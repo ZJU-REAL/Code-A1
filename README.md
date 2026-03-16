@@ -2,6 +2,16 @@
 
 <h1>Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning</h1>
 
+<p>
+  Aozhe Wang<sup>1,*</sup>, Yuchen Yan<sup>1,*</sup>, Nan Zhou<sup>1,*</sup>, Zhengxi Lu<sup>1,*</sup><br>
+  Weiming Lu<sup>1</sup>, Jun Xiao<sup>1</sup>, Yueting Zhuang<sup>1</sup>, Yongliang Shen<sup>1,&dagger;</sup>
+</p>
+
+<p>
+  <sup>1</sup>Zhejiang University<br>
+  <small><sup>*</sup>Equal contributions, <sup>&dagger;</sup>Corresponding authors</small>
+</p>
+
 <p><em>An adversarial co-evolution framework that jointly optimizes a Code LLM and a Test LLM for code reinforcement learning.</em></p>
 
 [![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)]()
