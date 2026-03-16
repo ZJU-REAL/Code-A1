@@ -13,7 +13,7 @@
 
 <div align="center">
   <img src="./docs/static/images/method.png" alt="Code-A1 Framework" width="88%" />
-  <p><em>Code-A1 jointly trains a Code LLM and a Test LLM with opposing objectives, enabling white-box adversarial test generation without self-collusion.</em></p>
+  <p><em>Code-A1 jointly trains a Code LLM and a Test LLM with opposing objectives, enables white-box adversarial test generation without self-collusion, and uses a Mistake Book replay mechanism to retain and revisit historical failure cases.</em></p>
 </div>
 
 ## Table of Contents
@@ -150,18 +150,18 @@ Code-A1 outperforms both the Golden Tests baseline trained on human annotations 
 
 | Code LLM | Method | HumanEval+ | MBPP+ | BigCodeBench | Avg |
 | - | - | -: | -: | -: | -: |
-| Qwen2.5-Coder-1.5B | Base | 63.42 | 60.87 | 29.34 | 51.21 |
-| Qwen2.5-Coder-1.5B | Golden Tests | 71.15 | 63.30 | 34.23 | 56.23 |
-| Qwen2.5-Coder-1.5B | Self-Play | 70.64 | 63.54 | 33.47 | 55.88 |
-| Qwen2.5-Coder-1.5B | **Code-A1** | **72.69** | 63.33 | **34.82** | **56.95** |
-| Qwen2.5-Coder-3B | Base | 77.63 | 63.12 | 41.78 | 60.84 |
-| Qwen2.5-Coder-3B | Golden Tests | 81.96 | 68.05 | 45.41 | 65.14 |
-| Qwen2.5-Coder-3B | Self-Play | 81.86 | 67.06 | 45.09 | 64.67 |
-| Qwen2.5-Coder-3B | **Code-A1** | **83.52** | **69.07** | **45.85** | **66.15** |
-| Qwen2.5-Coder-7B | Base | 83.69 | 71.95 | 49.41 | 68.35 |
-| Qwen2.5-Coder-7B | Golden Tests | 84.68 | 74.16 | 52.28 | 70.37 |
-| Qwen2.5-Coder-7B | Self-Play | 84.70 | 74.23 | 52.25 | 70.39 |
-| Qwen2.5-Coder-7B | **Code-A1** | **85.21** | **74.50** | **52.46** | **70.72** |
+| Qwen2.5-Coder-1.5B-Instruct | Base | 63.42 | 60.87 | 29.34 | 51.21 |
+| Qwen2.5-Coder-1.5B-Instruct | Golden Tests | 71.15 | 63.30 | 34.23 | 56.23 |
+| Qwen2.5-Coder-1.5B-Instruct | Self-Play | 70.64 | 63.54 | 33.47 | 55.88 |
+| Qwen2.5-Coder-1.5B-Instruct | **Code-A1** | **72.69** | 63.33 | **34.82** | **56.95** |
+| Qwen2.5-Coder-3B-Instruct | Base | 77.63 | 63.12 | 41.78 | 60.84 |
+| Qwen2.5-Coder-3B-Instruct | Golden Tests | 81.96 | 68.05 | 45.41 | 65.14 |
+| Qwen2.5-Coder-3B-Instruct | Self-Play | 81.86 | 67.06 | 45.09 | 64.67 |
+| Qwen2.5-Coder-3B-Instruct | **Code-A1** | **83.52** | **69.07** | **45.85** | **66.15** |
+| Qwen2.5-Coder-7B-Instruct | Base | 83.69 | 71.95 | 49.41 | 68.35 |
+| Qwen2.5-Coder-7B-Instruct | Golden Tests | 84.68 | 74.16 | 52.28 | 70.37 |
+| Qwen2.5-Coder-7B-Instruct | Self-Play | 84.70 | 74.23 | 52.25 | 70.39 |
+| Qwen2.5-Coder-7B-Instruct | **Code-A1** | **85.21** | **74.50** | **52.46** | **70.72** |
 
 ### Test generation
 
@@ -169,18 +169,18 @@ The Test LLM also improves substantially under adversarial co-evolution. Notably
 
 | Test LLM | Method | pass@5 | mut@5 | Mul |
 | - | - | -: | -: | -: |
-| Qwen2.5-Coder-1.5B | Base | 16.29 | 22.30 | 3.63 |
-| Qwen2.5-Coder-1.5B | SFT | 14.76 | 29.45 | 4.35 |
-| Qwen2.5-Coder-1.5B | Self-Play | 23.39 | 28.91 | 6.76 |
-| Qwen2.5-Coder-1.5B | **Code-A1** | **27.05** | 26.41 | **7.14** |
-| Qwen2.5-Coder-3B | Base | 20.93 | 42.55 | 8.91 |
-| Qwen2.5-Coder-3B | SFT | 23.51 | 36.29 | 8.53 |
-| Qwen2.5-Coder-3B | Self-Play | 29.64 | 50.92 | 15.09 |
-| Qwen2.5-Coder-3B | **Code-A1** | **30.86** | 49.56 | **15.29** |
-| Qwen2.5-Coder-7B | Base | 28.73 | 51.25 | 14.72 |
-| Qwen2.5-Coder-7B | SFT | 28.72 | 50.85 | 14.60 |
-| Qwen2.5-Coder-7B | Self-Play | 35.13 | 55.57 | 19.52 |
-| Qwen2.5-Coder-7B | **Code-A1** | **37.15** | 53.14 | **19.74** |
+| Qwen2.5-Coder-1.5B-Instruct | Base | 16.29 | 22.30 | 3.63 |
+| Qwen2.5-Coder-1.5B-Instruct | SFT | 14.76 | 29.45 | 4.35 |
+| Qwen2.5-Coder-1.5B-Instruct | Self-Play | 23.39 | 28.91 | 6.76 |
+| Qwen2.5-Coder-1.5B-Instruct | **Code-A1** | **27.05** | 26.41 | **7.14** |
+| Qwen2.5-Coder-3B-Instruct | Base | 20.93 | 42.55 | 8.91 |
+| Qwen2.5-Coder-3B-Instruct | SFT | 23.51 | 36.29 | 8.53 |
+| Qwen2.5-Coder-3B-Instruct | Self-Play | 29.64 | 50.92 | 15.09 |
+| Qwen2.5-Coder-3B-Instruct | **Code-A1** | **30.86** | 49.56 | **15.29** |
+| Qwen2.5-Coder-7B-Instruct | Base | 28.73 | 51.25 | 14.72 |
+| Qwen2.5-Coder-7B-Instruct | SFT | 28.72 | 50.85 | 14.60 |
+| Qwen2.5-Coder-7B-Instruct | Self-Play | 35.13 | 55.57 | 19.52 |
+| Qwen2.5-Coder-7B-Instruct | **Code-A1** | **37.15** | 53.14 | **19.74** |
 
 ## 📄 Citation
 
