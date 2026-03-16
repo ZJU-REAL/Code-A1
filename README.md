@@ -13,7 +13,7 @@
 
 <div align="center">
   <img src="./docs/static/images/method.png" alt="Code-A1 Framework" width="88%" />
-  <p><em>Code-A1 jointly trains a Code LLM and a Test LLM with opposing objectives, enables white-box adversarial test generation without self-collusion, and uses a Mistake Book replay mechanism to retain and revisit historical failure cases.</em></p>
+  <p><em>Code-A1 jointly trains a Code LLM and a Test LLM with opposing objectives, enables white-box adversarial test generation without self-collusion, and uses a Mistake Book replay mechanism to retrieve historical failure cases.</em></p>
 </div>
 
 ## Table of Contents
