@@ -39,7 +39,7 @@ Reinforcement learning for code generation typically depends on unit-test pass r
 Code-A1 addresses this by separating the two roles. A **Code LLM** is optimized to solve programming problems, while a **Test LLM** is optimized to expose errors in the generated code. This makes white-box test generation useful rather than dangerous: the Test LLM can inspect candidate implementations and generate targeted adversarial tests. The framework further stabilizes co-evolution with a **Mistake Book** replay mechanism and a **composite reward** that balances test validity and adversarial difficulty.
 
 <div align="center">
-  <img src="./docs/static/images/intro.png" alt="Code-A1 Introduction" width="78%" />
+  <img src="./docs/static/images/intro.png" alt="Code-A1 Introduction" width="60%" />
 </div>
 
 ## ✨ Highlights
