@@ -1,0 +1,154 @@
+prefix: xxx
+
+data:
+  train_files: ${prefix}/code/rl/train_data/kodcode_hard_dual_model_training_data_mix.parquet
+  val_files: ${prefix}/code/rl/val_data/validation_data_mix.parquet
+  max_prompt_length: 4096
+  max_response_length: 4096
+  train_batch_size: 256
+  val_batch_size: null
+  shuffle: True
+  filter_overlong_prompts: True
+  truncation: error
+  reward_fn_key: data_source
+  validation_shuffle: False
+
+actor_rollout_ref:
+  hybrid_engine: True
+  model:
+    path: Qwen/Qwen2.5-Coder-7B-Instruct
+    enable_gradient_checkpointing: True
+    enable_activation_offload: True
+    use_remove_padding: True
+  actor:
+    strategy: fsdp2
+    ppo_mini_batch_size: 128
+    ppo_micro_batch_size: null
+    ppo_micro_batch_size_per_gpu: 1
+    use_dynamic_bsz: True
+    ppo_max_token_len_per_gpu: 32768
+    grad_clip: 1.0
+    clip_ratio: 0.2
+    clip_ratio_low: 0.20
+    clip_ratio_high: 0.28
+    clip_ratio_c: 10.0
+    loss_agg_mode: "token-mean"
+    entropy_coeff: 0.00
+    use_kl_loss: True
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    ppo_epochs: 1
+    ulysses_sequence_parallel_size: 1
+    checkpoint:
+      contents: ['model', 'optimizer', 'extra']
+    optim:
+      lr: 1e-6
+      lr_warmup_steps: 10
+      warmup_style: cosine
+      weight_decay: 0.1
+    fsdp_config:
+      param_offload: False
+      optimizer_offload: False
+      offload_policy: False
+      reshard_after_forward: True
+      fsdp_size: -1
+      forward_prefetch: False
+    entropy_from_logits_with_chunking: False
+    entropy_checkpointing: False
+    policy_loss:
+      loss_mode: "vanilla"
+  ref:
+    fsdp_config:
+      param_offload: True
+      reshard_after_forward: True
+    log_prob_use_dynamic_bsz: true
+    log_prob_max_token_len_per_gpu: 32768
+    log_prob_micro_batch_size: 32
+    log_prob_micro_batch_size_per_gpu: 16
+    ulysses_sequence_parallel_size: ${actor_rollout_ref.actor.ulysses_sequence_parallel_size}
+    entropy_from_logits_with_chunking: ${actor_rollout_ref.actor.entropy_from_logits_with_chunking}
+  rollout:
+    name: vllm
+    mode: sync
+    temperature: 1.0
+    top_k: -1
+    top_p: 1
+    prompt_length: ${data.max_prompt_length}
+    response_length: ${data.max_response_length}
+    dtype: bfloat16
+    gpu_memory_utilization: 0.8
+    enforce_eager: False
+    free_cache_engine: False
+    load_format: dummy_dtensor
+    tensor_model_parallel_size: 1
+    max_num_batched_tokens: 8192
+    max_model_len: null
+    log_prob_micro_batch_size: null
+    log_prob_micro_batch_size_per_gpu: 32
+    log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+    log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
+    disable_log_stats: True
+    enable_chunked_prefill: True
+    n: 8
+    val_kwargs:
+      top_k: -1
+      top_p: 0.95
+      temperature: 0.7
+      n: 32
+      do_sample: True
+    multi_turn:
+      enable: False
+    calculate_log_probs: False
+
+reward_model:
+  enable: False
+  reward_manager: acg_llm
+  sandbox_fusion:
+    memory_limit_mb: null
+  reward_kwargs:
+    alpha: 0.5
+
+algorithm:
+  adv_estimator: grpo
+  use_kl_in_reward: False
+  kl_ctrl:
+    kl_coef: 0.001
+
+trainer:
+  total_epochs: 3
+  total_training_steps: null
+  project_name: Code-A1
+  experiment_name: 7B_A1
+  logger: ['console', 'wandb']
+  rollout_data_dir: ${prefix}/code/rl/logs/model_a_rollout/${trainer.experiment_name}
+  validation_data_dir: ${prefix}/code/rl/logs/model_a_validation/${trainer.experiment_name}
+  nnodes: 1
+  n_gpus_per_node: 4
+  save_freq: 50
+  test_freq: 10
+  val_only: False
+  resume_mode: auto
+  resume_from_path: null
+  del_local_ckpt_after_load: False
+  default_local_dir: ${prefix}/code/rl/checkpoints/model_a/${trainer.experiment_name}
+  ray_wait_register_center_timeout: 300
+
+other:
+  data:
+    max_prompt_length: 8192
+
+  actor_rollout_ref:
+    model:
+      path: Qwen/Qwen2.5-Coder-7B-Instruct
+    rollout:
+      n: 8
+
+  trainer:
+    rollout_data_dir: ${prefix}/testcase/rl/logs/model_b_rollout/${trainer.experiment_name}
+    validation_data_dir: ${prefix}/testcase/rl/logs/model_b_validation/${trainer.experiment_name}
+    n_gpus_per_node: 4
+    default_local_dir: ${prefix}/testcase/rl/checkpoints/model_b/${trainer.experiment_name}
+
+  update_n: 1 
+
+mistake_book: True
