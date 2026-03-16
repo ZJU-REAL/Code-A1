@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning">
+  <meta property="og:title" content="Code-A1" />
+  <meta property="og:description" content="Adversarial co-evolution of a Code LLM and a Test LLM via reinforcement learning." />
+  <meta property="og:url" content="https://example.com/Code-A1/" />
+  <meta property="og:image" content="static/images/intro.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:title" content="Code-A1">
+  <meta name="twitter:description" content="Adversarial co-evolution of a Code LLM and a Test LLM via reinforcement learning.">
+  <meta name="twitter:image" content="static/images/intro.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="keywords" content="Code Generation, Reinforcement Learning, Test Generation, Adversarial Learning, LLM">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <!-- <link rel="icon" type="image/png" href="static/images/logo.png"> -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNav">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="mainNav" class="navbar-menu">
+      <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+        <a class="navbar-item" href="https://github.com/ZJU-REAL" target="_blank">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+        </a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">More Research</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://zju-real.github.io/SpatialLadder" target="_blank">SpatialLadder</a>
+            <a class="navbar-item" href="https://zju-real.github.io/VerifyBench/" target="_blank">VerifyBench</a>
+            <a class="navbar-item" href="https://zju-real.github.io/InftyThink/" target="_blank">InftyThink</a>
+            <a class="navbar-item" href="https://zju-real.github.io/GUI-G2" target="_blank">GUI-G2</a>
+            <a class="navbar-item" href="https://zju-real.github.io/SVGenius/" target="_blank">SVGenius</a>
+            <a class="navbar-item" href="https://zju-real.github.io/SBT/" target="_blank">SBT</a>
+            <a class="navbar-item" href="https://zju-real.github.io/CoT-Bridge/" target="_blank">CoT-Bridge</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <!-- <img src="static/images/logo.png" alt="Code-A1 logo" class="page-logo"> -->
+            <h1 class="title is-1 publication-title">Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Aozhe Wang<sup>1,*</sup>,</span>
+              <span class="author-block">Yuchen Yan<sup>1,*</sup>,</span>
+              <span class="author-block">Nan Zhou<sup>1,*</sup>,</span>
+              <span class="author-block">Zhengxi Lu<sup>1,*</sup>,</span>
+              <br>
+              <span class="author-block">Weiming Lu<sup>1</sup>,</span>
+              <span class="author-block">Jun Xiao<sup>1</sup>,</span>
+              <span class="author-block">Yueting Zhuang<sup>1</sup>,</span>
+              <span class="author-block">Yongliang Shen<sup>1,&dagger;</sup></span>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>Zhejiang University</span>
+              <span class="eql-cntrb"><small><br><sup>*</sup>Equal contributions, <sup>&dagger;</sup>Corresponding authors</small></span>
+            </div>
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>GitHub</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3 has-text-centered">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Reinforcement learning for code generation relies on verifiable rewards from unit test pass rates. Yet high-quality test suites are scarce, existing datasets offer limited coverage, and static rewards fail to adapt as models improve. Recent self-play methods unify code and test generation in a single model, but face an inherent dilemma: white-box access leads to self-collusion where the model produces trivial tests for easy rewards, yet black-box restriction yields generic tests that miss implementation-specific bugs. We introduce <b>Code-A1</b>, an adversarial co-evolution framework that jointly optimizes a Code LLM and a Test LLM with opposing objectives. The Code LLM is rewarded for passing more tests, while the Test LLM is rewarded for exposing more defects. This architectural separation eliminates self-collusion risks and safely enables white-box test generation, where the Test LLM can inspect candidate code to craft targeted adversarial tests. We further introduce a Mistake Book mechanism for experience replay and a composite reward balancing test validity with adversarial difficulty. Experiments on Qwen2.5-Coder models demonstrate that Code-A1 achieves code generation performance matching or exceeding models trained on human-annotated tests, while significantly improving test generation capability.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Introduction</h2>
+      <div class="columns is-vcentered is-variable is-6 intro-block">
+        <div class="column is-7-desktop">
+          <div class="media-frame">
+            <img src="static/images/intro.png" alt="Introduction figure for Code-A1" class="intro-image">
+          </div>
+        </div>
+        <div class="column is-5-desktop">
+          <div class="content has-text-justified">
+            <p>
+              The core motivation of Code-A1 is that code RL needs rewards that evolve with the model. Static golden tests are sparse and quickly become saturated, while self-play with a single model creates a conflict between writing code and judging it.
+            </p>
+            <p>
+              Code-A1 resolves this by splitting the roles: one model writes code, the other attacks it with tests. This turns white-box access into an advantage rather than a reward-hacking risk, because the Test LLM can inspect the candidate program and generate implementation-specific adversarial cases.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Method</h2>
+      <div class="content has-text-justified">
+        <p>
+          Code-A1 jointly trains a <b>Code LLM</b> and a <b>Test LLM</b> with opposite objectives. For each question, the Code LLM samples candidate solutions and the Test LLM generates multiple test suites conditioned on both the question and the candidate code. Generated tests are validated against ground-truth code before being used for reward computation.
+        </p>
+      </div>
+      <div class="media-frame">
+        <img src="static/images/method.png" alt="Method figure for Code-A1">
+      </div>
+      <div class="columns is-variable is-5 method-grid">
+        <div class="column">
+          <div class="simple-card">
+            <h3 class="title is-5">Adversarial Rollout</h3>
+            <p>The Code LLM is rewarded for passing more tests, while the Test LLM is rewarded for exposing more defects on those same solutions.</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="simple-card">
+            <h3 class="title is-5">Mistake Book</h3>
+            <p>Historical failures are replayed as a stable baseline so the Code LLM does not forget earlier weaknesses during later training.</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="simple-card">
+            <h3 class="title is-5">Composite Reward</h3>
+            <p>Test LLM balances test validity and adversarial difficulty with $$R_T(\hat{T}) = \alpha R_T^{val} + (1-\alpha) R_T^{adv}.$$</p>
+          </div>
+        </div>
+      </div>
+      <div class="content has-text-justified">
+        <p>
+          This design directly addresses the main failure modes discussed in the paper: black-box tests are too generic, pure adversarial rewards can become unstable, and a model trained only on current failures tends to forget resolved bugs. Code-A1 combines white-box testing, reward shaping, and replay to keep the co-evolution useful throughout training.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-light detailed-pipeline-section">
+    <div class="container is-max-desktop">
+      <h3 class="title is-4 subsection-title">Detailed Pipeline</h3>
+      <div class="content has-text-justified">
+        <p>
+          At the systems level, the framework separates Code LLM training and Test LLM training while connecting them through sandbox execution, validation, and replay retrieval. The pipeline below shows where candidate code is generated, where tests are validated, and where Mistake Book updates are applied.
+        </p>
+      </div>
+      <div class="media-frame">
+        <img src="static/images/detailed_pipeline.png" alt="Detailed training pipeline for Code-A1">
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Main Results</h2>
+      <div class="content has-text-justified">
+        <p>
+          Code-A1 improves both sides of the training game. On code generation, it reaches the best average score across all three Qwen2.5-Coder scales. On test generation, the gains are even more striking: the 3B Test LLM trained with Code-A1 reaches a Mul score of <b>15.29</b>, surpassing the <b>14.72</b> achieved by the unoptimized 7B base model.
+        </p>
+      </div>
+
+      <div class="table-container media-frame">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th>Code LLM</th>
+              <th>Method</th>
+              <th>HumanEval+</th>
+              <th>MBPP+</th>
+              <th>BigCodeBench</th>
+              <th>Avg</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-1.5B</td>
+              <td>Base</td>
+              <td>63.42</td>
+              <td>60.87</td>
+              <td>29.34</td>
+              <td>51.21</td>
+            </tr>
+            <tr>
+              <td>Golden Tests</td>
+              <td>71.15</td>
+              <td>63.30</td>
+              <td>34.23</td>
+              <td>56.23</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>70.64</td>
+              <td>63.54</td>
+              <td>33.47</td>
+              <td>55.88</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>72.69</b></td>
+              <td>63.33</td>
+              <td><b>34.82</b></td>
+              <td><b>56.95</b></td>
+            </tr>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-3B</td>
+              <td>Base</td>
+              <td>77.63</td>
+              <td>63.12</td>
+              <td>41.78</td>
+              <td>60.84</td>
+            </tr>
+            <tr>
+              <td>Golden Tests</td>
+              <td>81.96</td>
+              <td>68.05</td>
+              <td>45.41</td>
+              <td>65.14</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>81.86</td>
+              <td>67.06</td>
+              <td>45.09</td>
+              <td>64.67</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>83.52</b></td>
+              <td><b>69.07</b></td>
+              <td><b>45.85</b></td>
+              <td><b>66.15</b></td>
+            </tr>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-7B</td>
+              <td>Base</td>
+              <td>83.69</td>
+              <td>71.95</td>
+              <td>49.41</td>
+              <td>68.35</td>
+            </tr>
+            <tr>
+              <td>Golden Tests</td>
+              <td>84.68</td>
+              <td>74.16</td>
+              <td>52.28</td>
+              <td>70.37</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>84.70</td>
+              <td>74.23</td>
+              <td>52.25</td>
+              <td>70.39</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>85.21</b></td>
+              <td><b>74.50</b></td>
+              <td><b>52.46</b></td>
+              <td><b>70.72</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-container media-frame">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th>Test LLM</th>
+              <th>Method</th>
+              <th>pass@5</th>
+              <th>mut@5</th>
+              <th>Mul</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-1.5B</td>
+              <td>Base</td>
+              <td>16.29</td>
+              <td>22.30</td>
+              <td>3.63</td>
+            </tr>
+            <tr>
+              <td>SFT</td>
+              <td>14.76</td>
+              <td>29.45</td>
+              <td>4.35</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>23.39</td>
+              <td>28.91</td>
+              <td>6.76</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>27.05</b></td>
+              <td>26.41</td>
+              <td><b>7.14</b></td>
+            </tr>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-3B</td>
+              <td>Base</td>
+              <td>20.93</td>
+              <td>42.55</td>
+              <td>8.91</td>
+            </tr>
+            <tr>
+              <td>SFT</td>
+              <td>23.51</td>
+              <td>36.29</td>
+              <td>8.53</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>29.64</td>
+              <td>50.92</td>
+              <td>15.09</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>30.86</b></td>
+              <td>49.56</td>
+              <td><b>15.29</b></td>
+            </tr>
+            <tr>
+              <td rowspan="4">Qwen2.5-Coder-7B</td>
+              <td>Base</td>
+              <td>28.73</td>
+              <td>51.25</td>
+              <td>14.72</td>
+            </tr>
+            <tr>
+              <td>SFT</td>
+              <td>28.72</td>
+              <td>50.85</td>
+              <td>14.60</td>
+            </tr>
+            <tr>
+              <td>Self-Play</td>
+              <td>35.13</td>
+              <td>55.57</td>
+              <td>19.52</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>Code-A1</td>
+              <td><b>37.15</b></td>
+              <td>53.14</td>
+              <td><b>19.74</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Analysis</h2>
+      <div class="analysis-carousel">
+        <div class="analysis-controls">
+          <button class="analysis-nav" data-direction="prev" aria-label="Previous analysis slide">&#8249;</button>
+          <button class="analysis-nav" data-direction="next" aria-label="Next analysis slide">&#8250;</button>
+        </div>
+        <div class="analysis-track">
+          <article class="analysis-slide">
+            <div class="columns is-vcentered is-variable is-6">
+              <div class="column is-7-desktop">
+                <div class="media-frame">
+                  <img src="static/images/reward.png" alt="Training dynamics analysis">
+                </div>
+              </div>
+              <div class="column is-5-desktop">
+                <div class="content has-text-justified">
+                  <h3 class="title is-5">Training Dynamics</h3>
+                  <p>
+                    Training curves show the two models improving together. With $\alpha=0.5$, the Code LLM reward closely tracks the golden-test baseline, suggesting that dynamically generated tests can provide supervision comparable to human-annotated tests.
+                  </p>
+                  <p>
+                    On the Test LLM side, the sustained reward remains strongest at the balanced setting, indicating that the generated tests stay both executable and adversarial enough to keep pushing the code model forward.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="analysis-slide">
+            <div class="columns is-vcentered is-variable is-6">
+              <div class="column is-7-desktop">
+                <div class="table-container media-frame">
+                  <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                      <tr>
+                        <th>Golden Test Source</th>
+                        <th>HE+</th>
+                        <th>MBPP+</th>
+                        <th>BCB</th>
+                        <th>Avg</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Human Annotation</td>
+                        <td>71.15</td>
+                        <td>63.30</td>
+                        <td><b>34.23</b></td>
+                        <td>56.23</td>
+                      </tr>
+                      <tr>
+                        <td>Base Test LLM</td>
+                        <td>69.68</td>
+                        <td>63.66</td>
+                        <td>32.85</td>
+                        <td>55.40</td>
+                      </tr>
+                      <tr>
+                        <td>SFT Test LLM</td>
+                        <td>71.49</td>
+                        <td>64.24</td>
+                        <td>32.93</td>
+                        <td>56.22</td>
+                      </tr>
+                      <tr class="highlight-row">
+                        <td>Code-A1 Test LLM</td>
+                        <td><b>71.67</b></td>
+                        <td><b>64.42</b></td>
+                        <td>34.17</td>
+                        <td><b>56.75</b></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="column is-5-desktop">
+                <div class="content has-text-justified">
+                  <h3 class="title is-5">Generated Tests as Supervision</h3>
+                  <p>
+                    The paper further evaluates test quality by reusing generated tests as static golden tests for standard RLVR training. Tests produced by Code-A1 yield the best average score, even slightly surpassing human annotations.
+                  </p>
+                  <p>
+                    This result is important because it shows the Test LLM is not merely helping online training; it is also synthesizing supervision of sufficient quality to replace expensive manually written tests.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="analysis-slide">
+            <div class="columns is-vcentered is-variable is-6">
+              <div class="column is-7-desktop">
+                <div class="table-container media-frame">
+                  <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                      <tr>
+                        <th>Code LLM</th>
+                        <th>Test LLM</th>
+                        <th>HE+</th>
+                        <th>MBPP+</th>
+                        <th>BCB</th>
+                        <th>Avg</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Base</td>
+                        <td>/</td>
+                        <td>77.63</td>
+                        <td>63.12</td>
+                        <td>41.78</td>
+                        <td>60.84</td>
+                      </tr>
+                      <tr>
+                        <td>Code-A1</td>
+                        <td>/</td>
+                        <td>83.52</td>
+                        <td>69.07</td>
+                        <td>45.85</td>
+                        <td>66.15</td>
+                      </tr>
+                      <tr>
+                        <td>Base</td>
+                        <td>Base</td>
+                        <td>82.32</td>
+                        <td>70.63</td>
+                        <td>42.45</td>
+                        <td>65.13</td>
+                      </tr>
+                      <tr>
+                        <td>Code-A1</td>
+                        <td>Base</td>
+                        <td>84.76</td>
+                        <td>71.69</td>
+                        <td>45.91</td>
+                        <td>67.45</td>
+                      </tr>
+                      <tr>
+                        <td>Base</td>
+                        <td>Code-A1</td>
+                        <td>82.93</td>
+                        <td>70.90</td>
+                        <td>43.63</td>
+                        <td>65.82</td>
+                      </tr>
+                      <tr class="highlight-row">
+                        <td>Code-A1</td>
+                        <td>Code-A1</td>
+                        <td><b>85.37</b></td>
+                        <td><b>71.96</b></td>
+                        <td><b>46.09</b></td>
+                        <td><b>67.81</b></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="column is-5-desktop">
+                <div class="content has-text-justified">
+                  <h3 class="title is-5">Test-Time Collaboration</h3>
+                  <p>
+                    Beyond training, Code-A1 also helps at inference time. Under parallel test-time scaling, the best combination is the full Code-A1 pair, where the evolved Test LLM can more effectively distinguish subtle correctness differences among candidate solutions.
+                  </p>
+                  <p>
+                    The result suggests that the learned verifier is genuinely stronger, not just tuned for training-time rewards.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="analysis-dots">
+          <button class="analysis-dot is-active" data-slide="0" aria-label="Go to analysis slide 1"></button>
+          <button class="analysis-dot" data-slide="1" aria-label="Go to analysis slide 2"></button>
+          <button class="analysis-dot" data-slide="2" aria-label="Go to analysis slide 3"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="bibtex">
+    <div class="container is-max-desktop content">
+      <h2 class="title is-3">BibTeX</h2>
+      <pre><code>@misc{code-a1-2026,
+  title={Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning},
+  author={Anonymous Authors},
+  year={2026},
+  primaryClass={cs.CL}
+}</code></pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content has-text-centered">
+            <p>
+              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io/" target="_blank">Nerfies</a> project page. You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    $(document).ready(function() {
+      $(".navbar-burger").click(function() {
+        const target = $(this).data("target");
+        $(".navbar-burger").toggleClass("is-active");
+        $("#" + target).toggleClass("is-active");
+      });
+      const track = $(".analysis-track");
+      const dots = $(".analysis-dot");
+      const navs = $(".analysis-nav");
+      let currentSlide = 0;
+      const slideCount = dots.length;
+
+      function goToSlide(index) {
+        currentSlide = (index + slideCount) % slideCount;
+        const slideWidth = $(".analysis-carousel").width();
+        track.css("transform", "translateX(-" + (slideWidth * currentSlide) + "px)");
+        dots.removeClass("is-active");
+        dots.eq(currentSlide).addClass("is-active");
+      }
+
+      dots.click(function() {
+        goToSlide($(this).data("slide"));
+      });
+
+      navs.click(function() {
+        const direction = $(this).data("direction");
+        goToSlide(currentSlide + (direction === "next" ? 1 : -1));
+      });
+
+      setInterval(function() {
+        goToSlide((currentSlide + 1) % slideCount);
+      }, 5000);
+
+      $(window).on("resize", function() {
+        goToSlide(currentSlide);
+      });
+    });
+  </script>
+</body>
+
+</html>
