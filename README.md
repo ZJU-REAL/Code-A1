@@ -14,7 +14,7 @@
 
 <p><em>An adversarial co-evolution framework that jointly optimizes a Code LLM and a Test LLM via reinforcement learning.</em></p>
 
-[![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)]()
+[![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2603.15611)
 [![Project Page](https://img.shields.io/badge/Code--A1-000000?style=for-the-badge&logo=github&logoColor=white)](https://zju-real.github.io/Code-A1)
 
 </div>
