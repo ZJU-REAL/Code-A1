@@ -195,11 +195,14 @@ The Test LLM also improves substantially under adversarial co-evolution. Notably
 ## 📄 Citation
 
 ```bibtex
-@misc{code-a1-2026,
-  title={Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning},
-  author={Anonymous Authors},
-  year={2026},
-  primaryClass={cs.CL}
+@misc{wang2026codea1adversarialevolvingcode,
+      title={Code-A1: Adversarial Evolving of Code LLM and Test LLM via Reinforcement Learning}, 
+      author={Aozhe Wang and Yuchen Yan and Nan Zhou and Zhengxi Lu and Weiming Lu and Jun Xiao and Yueting Zhuang and Yongliang Shen},
+      year={2026},
+      eprint={2603.15611},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2603.15611}, 
 }
 ```
 
