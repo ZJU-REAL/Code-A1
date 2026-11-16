@@ -128,13 +128,14 @@ def main():
     p.add_argument("--steps", type=int, default=128)
     p.add_argument("--problems", type=int, default=512)
     p.add_argument("--samples", type=int, default=2)
+    p.add_argument("--batch-size", type=int, default=4)
     p.add_argument("--max-tokens", type=int, default=512)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--output", type=Path, default=ROOT / "artifacts/lfm3-dual-baseline")
     p.add_argument("--data-check", action="store_true")
     args = p.parse_args()
-    if args.samples < 2 or args.problems < args.steps:
-        p.error("samples must be >= 2 and problems >= steps")
+    if args.samples < 2 or args.problems < args.steps * args.batch_size:
+        p.error("samples must be >= 2 and problems >= steps * batch-size")
     rows = pq.read_table(DATA).to_pylist()
     rows = [r for r in rows if r.get("GT_code") and r.get("GT_test") and r.get("prompt") and not r.get("is_OJ")]
     random.Random(args.seed).shuffle(rows)
@@ -162,30 +163,30 @@ def main():
     mistake_book = {}
     log_path = args.output / "steps.jsonl"
     for step in range(args.steps):
-        row = rows[step % len(rows)]
-        key = str(row["extra_info"].get("question_id", step))
         coder_samples, tester_samples, details = [], [], []
-        for _ in range(args.samples):
-            ca, cb, code_text = generate(models[0], tokenizer, row["prompt"], "cuda:0", args.max_tokens)
-            code = extract_code(code_text)
-            tester_prompt = [{"role": "system", "content": "Write valid Python assert statements only."},
-                {"role": "user", "content": "Problem:\n" + row["problem"] +
-                 "\nCandidate solution:\n```python\n" + code +
-                 "\n```\nWrite up to eight assert statements that pass on the correct solution and reveal bugs in the candidate."}]
-            ta, tb, test_text = generate(models[1], tokenizer, tester_prompt, "cuda:1", args.max_tokens)
-            cr, tr, valid, mistakes, gt_passed, gt_total = score(code, row["GT_code"], row["GT_test"],
-                extract_asserts(test_text), mistake_book.get(key, []))
-            coder_samples.append((ca, cb, cr))
-            tester_samples.append((ta, tb, tr))
-            details.append({"coder_reward": cr, "tester_reward": tr, "valid_tests": len(valid),
-                            "gt_passed": gt_passed, "gt_total": gt_total})
-            mistake_book.setdefault(key, [])
-            mistake_book[key] = list(dict.fromkeys(mistake_book[key] + mistakes))[:64]
+        for row in rows[step * args.batch_size:(step + 1) * args.batch_size]:
+            key = str(row["extra_info"].get("question_id", step))
+            for _ in range(args.samples):
+                ca, cb, code_text = generate(models[0], tokenizer, row["prompt"], "cuda:0", args.max_tokens)
+                code = extract_code(code_text)
+                tester_prompt = [{"role": "system", "content": "Write valid Python assert statements only."},
+                    {"role": "user", "content": "Problem:\n" + row["problem"] +
+                     "\nCandidate solution:\n```python\n" + code +
+                     "\n```\nWrite up to eight assert statements that pass on the correct solution and reveal bugs in the candidate."}]
+                ta, tb, test_text = generate(models[1], tokenizer, tester_prompt, "cuda:1", args.max_tokens)
+                cr, tr, valid, mistakes, gt_passed, gt_total = score(code, row["GT_code"], row["GT_test"],
+                    extract_asserts(test_text), mistake_book.get(key, []))
+                coder_samples.append((ca, cb, cr))
+                tester_samples.append((ta, tb, tr))
+                details.append({"question_id": key, "coder_reward": cr, "tester_reward": tr,
+                                "valid_tests": len(valid), "gt_passed": gt_passed, "gt_total": gt_total})
+                mistake_book.setdefault(key, [])
+                mistake_book[key] = list(dict.fromkeys(mistake_book[key] + mistakes))[:64]
         coder_norm = update(models[0], optimizers[0], coder_samples, "cuda:0")
         tester_norm = update(models[1], optimizers[1], tester_samples, "cuda:1")
-        record = {"step": step + 1, "question_id": key, "samples": details,
+        record = {"step": step + 1, "samples": details,
                   "coder_grad_norm": coder_norm, "tester_grad_norm": tester_norm,
-                  "mistake_book_size": len(mistake_book[key])}
+                  "mistake_book_size": sum(map(len, mistake_book.values()))}
         with log_path.open("a") as f:
             f.write(json.dumps(record) + "\n")
         print(json.dumps(record), flush=True)
