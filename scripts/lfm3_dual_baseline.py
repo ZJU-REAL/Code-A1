@@ -129,7 +129,8 @@ def main():
     p.add_argument("--problems", type=int, default=512)
     p.add_argument("--samples", type=int, default=2)
     p.add_argument("--batch-size", type=int, default=4)
-    p.add_argument("--max-tokens", type=int, default=512)
+    p.add_argument("--max-tokens", type=int, default=1024)
+    p.add_argument("--require-both-gradients", action="store_true")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--output", type=Path, default=ROOT / "artifacts/lfm3-dual-baseline")
     p.add_argument("--data-check", action="store_true")
@@ -141,6 +142,8 @@ def main():
     random.Random(args.seed).shuffle(rows)
     rows = rows[:args.problems]
     args.output.mkdir(parents=True, exist_ok=True)
+    if (args.output / "steps.jsonl").exists():
+        raise FileExistsError(f"Existing run in {args.output}; choose a new output directory")
     (args.output / "config.json").write_text(json.dumps({**vars(args), "output": str(args.output),
         "model": "LiquidAI/LFM3-1.7B", "kind": "hf_two_policy_reinforce_not_official_code_a1_grpo"}, indent=2))
     print(f"selected {len(rows)} non-OJ tasks from {pq.ParquetFile(DATA).metadata.num_rows}", flush=True)
@@ -190,6 +193,9 @@ def main():
         with log_path.open("a") as f:
             f.write(json.dumps(record) + "\n")
         print(json.dumps(record), flush=True)
+        if args.require_both_gradients and step + 1 == args.steps:
+            assert any(json.loads(line)["coder_grad_norm"] > 0 for line in log_path.read_text().splitlines())
+            assert any(json.loads(line)["tester_grad_norm"] > 0 for line in log_path.read_text().splitlines())
         if step + 1 == args.steps:
             for name, model in zip(("coder", "tester"), models):
                 model.save_pretrained(args.output / f"{name}-step-{step+1}", safe_serialization=True)
