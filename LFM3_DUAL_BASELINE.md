@@ -27,6 +27,9 @@ sbatch --time=03:00:00 scripts/lfm3_dual_baseline.sbatch \
 sbatch scripts/lfm3_dual_baseline.sbatch \
   --steps 128 --batch-size 4 --problems 512 --samples 2 --max-tokens 1024 \
   --output artifacts/lfm3-dual-baseline
+sbatch --dependency=afterok:<training-job-id> scripts/lfm3_dual_eval.sbatch
 ```
 
 Only launch the 512-problem job after the 16-problem gate completes with finite, nonzero coder and tester gradient norms. The full run's maximum wall time is 16 hours on `coe-gpu`; if it does not finish within that limit, reduce the scale and record the actual number of completed steps from `steps.jsonl`.
+
+The held-out evaluation uses 64 fixed KodCode validation problems, greedy generation, the first four original tests for coder pass@1, and the number of tester assertions that pass on the reference solution. It evaluates the original LFM3 twice as coder and tester, then the trained pair, and saves per-task records and aggregate summaries. These held-out measures are comparable within this run; they are separate from the earlier HumanEval/BigCodeBench/ULT Lite report.
