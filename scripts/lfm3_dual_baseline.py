@@ -13,6 +13,7 @@ import random
 import re
 import subprocess
 import tempfile
+import shutil
 
 import pyarrow.parquet as pq
 import torch
@@ -123,6 +124,37 @@ def update(model, optimizer, samples, device):
     return float(norm)
 
 
+def save_checkpoint(output, step, models, optimizers, tokenizer, mistake_book):
+    """Atomically replace the latest resumable checkpoint."""
+    pending = output / "checkpoint-latest.pending"
+    latest = output / "checkpoint-latest"
+    if pending.exists():
+        shutil.rmtree(pending)
+    pending.mkdir(parents=True)
+    for name, model in zip(("coder", "tester"), models):
+        model.save_pretrained(pending / name, safe_serialization=True)
+    tokenizer.save_pretrained(pending / "tokenizer")
+    torch.save({
+        "step": step,
+        "optimizers": [optimizer.state_dict() for optimizer in optimizers],
+        "mistake_book": mistake_book,
+        "python_rng_state": random.getstate(),
+        "torch_rng_state": torch.get_rng_state(),
+        "cuda_rng_states": torch.cuda.get_rng_state_all(),
+    }, pending / "training-state.pt")
+    previous = output / "checkpoint-previous"
+    if previous.exists():
+        shutil.rmtree(previous)
+    if latest.exists():
+        latest.rename(previous)
+    pending.rename(latest)
+    if previous.exists():
+        shutil.rmtree(previous)
+    (output / "checkpoint.json").write_text(json.dumps({"step": step,
+        "path": str(latest)}, indent=2))
+    print(f"saved resumable checkpoint at step {step}: {latest}", flush=True)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--steps", type=int, default=128)
@@ -133,6 +165,8 @@ def main():
     p.add_argument("--require-both-gradients", action="store_true")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--output", type=Path, default=ROOT / "artifacts/lfm3-dual-baseline")
+    p.add_argument("--checkpoint-every", type=int, default=10)
+    p.add_argument("--resume-from", type=Path)
     p.add_argument("--data-check", action="store_true")
     args = p.parse_args()
     if args.samples < 2 or args.problems < args.steps * args.batch_size:
@@ -142,10 +176,16 @@ def main():
     random.Random(args.seed).shuffle(rows)
     rows = rows[:args.problems]
     args.output.mkdir(parents=True, exist_ok=True)
-    if (args.output / "steps.jsonl").exists():
+    if (args.output / "steps.jsonl").exists() and not args.resume_from:
         raise FileExistsError(f"Existing run in {args.output}; choose a new output directory")
-    (args.output / "config.json").write_text(json.dumps({**vars(args), "output": str(args.output),
-        "model": "LiquidAI/LFM3-1.7B", "kind": "hf_two_policy_reinforce_not_official_code_a1_grpo"}, indent=2))
+    if args.checkpoint_every < 1:
+        p.error("checkpoint-every must be >= 1")
+    config = {**vars(args), "output": str(args.output),
+        "resume_from": str(args.resume_from) if args.resume_from else None,
+        "model": "LiquidAI/LFM3-1.7B",
+        "kind": "hf_two_policy_reinforce_not_official_code_a1_grpo"}
+    if not args.resume_from:
+        (args.output / "config.json").write_text(json.dumps(config, indent=2))
     print(f"selected {len(rows)} non-OJ tasks from {pq.ParquetFile(DATA).metadata.num_rows}", flush=True)
     if args.data_check:
         assert rows and rows[0]["prompt"][0]["role"] == "system"
@@ -157,15 +197,30 @@ def main():
     set_seed(args.seed)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=True)
     models, optimizers = [], []
-    for device in ("cuda:0", "cuda:1"):
-        model = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True,
+    resume_root = args.resume_from.resolve() if args.resume_from else None
+    for name, device in zip(("coder", "tester"), ("cuda:0", "cuda:1")):
+        model_path = resume_root / name if resume_root else MODEL
+        model = AutoModelForCausalLM.from_pretrained(model_path, local_files_only=True,
             trust_remote_code=True, dtype=torch.bfloat16, attn_implementation="sdpa").to(device)
         model.gradient_checkpointing_enable()
         models.append(model)
         optimizers.append(torch.optim.AdamW(model.parameters(), lr=1e-6, weight_decay=0.1))
     mistake_book = {}
+    start_step = 0
+    if resume_root:
+        state = torch.load(resume_root / "training-state.pt", map_location="cpu", weights_only=False)
+        start_step = int(state["step"])
+        if start_step >= args.steps:
+            p.error(f"checkpoint step {start_step} is not less than requested steps {args.steps}")
+        for optimizer, optimizer_state in zip(optimizers, state["optimizers"]):
+            optimizer.load_state_dict(optimizer_state)
+        mistake_book = state["mistake_book"]
+        random.setstate(state["python_rng_state"])
+        torch.set_rng_state(state["torch_rng_state"])
+        torch.cuda.set_rng_state_all(state["cuda_rng_states"])
+        print(f"resumed from step {start_step}: {resume_root}", flush=True)
     log_path = args.output / "steps.jsonl"
-    for step in range(args.steps):
+    for step in range(start_step, args.steps):
         coder_samples, tester_samples, details = [], [], []
         for row in rows[step * args.batch_size:(step + 1) * args.batch_size]:
             key = str(row["extra_info"].get("question_id", step))
@@ -196,6 +251,8 @@ def main():
         if args.require_both_gradients and step + 1 == args.steps:
             assert any(json.loads(line)["coder_grad_norm"] > 0 for line in log_path.read_text().splitlines())
             assert any(json.loads(line)["tester_grad_norm"] > 0 for line in log_path.read_text().splitlines())
+        if (step + 1) % args.checkpoint_every == 0 or step + 1 == args.steps:
+            save_checkpoint(args.output, step + 1, models, optimizers, tokenizer, mistake_book)
         if step + 1 == args.steps:
             for name, model in zip(("coder", "tester"), models):
                 model.save_pretrained(args.output / f"{name}-step-{step+1}", safe_serialization=True)
