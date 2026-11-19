@@ -1,6 +1,7 @@
 # ECE6257: Adversarial Co-Training for Agentic Coding
 
 Reproduce Code-A1's adversarial coder–tester co-training and evaluate how branch coverage and selected runtime values affect test quality and code generation.
+- [LFM3 dual-policy training and held-out results](LFM3_TRAINING_RESULTS.md) (128 steps; tester valid assertions +38%; coder pass@1 -3.1 pp)
 
 - [LFM3-1.7B inference-only results](LFM3_EVALUATION.md) (128-task feasibility and full benchmarks completed; W&B disabled)
 - [Progress and seven-week plan](progress.md)

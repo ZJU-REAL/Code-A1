@@ -35,8 +35,11 @@ for source in snapshot.iterdir():
         if destination.is_symlink():destination.unlink()
         shutil.copyfile(source,destination)
         hashes[source.name]=hashlib.sha256(destination.read_bytes()).hexdigest()
-    elif not destination.exists():
-        destination.symlink_to(os.path.relpath(source.resolve(),directory))
+    else:
+        if destination.is_symlink() and not destination.exists():
+            destination.unlink()
+        if not destination.exists():
+            destination.symlink_to(os.path.relpath(source.resolve(),directory.resolve()))
 (OUT/'custom-code-sha256.json').write_text(json.dumps(hashes,indent=2)+'\n')
 print(json.dumps({'model_id':metadata['model_id'],'revision':metadata['revision'],
                   'local_path':str(directory),'custom_code_sha256':hashes},indent=2))
