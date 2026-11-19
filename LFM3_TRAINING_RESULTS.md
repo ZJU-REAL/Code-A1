@@ -57,3 +57,17 @@ The ignored output directory contains per-task JSONL records and aggregate summa
 - `artifacts/lfm3-dual-resumable/heldout-base.summary.json`
 - `artifacts/lfm3-dual-resumable/heldout-trained.jsonl`
 - `artifacts/lfm3-dual-resumable/heldout-trained.summary.json`
+
+
+## Sampled pass@k evaluation
+
+A second evaluation used the same fixed 64 held-out tasks with 8 samples per task (seed 2026, temperature 0.7, top-p 0.95, and 1,024 maximum generated tokens). It ran as PACE job 7166033.
+
+| Checkpoint | Sampled pass@1 | pass@8 | Correct samples |
+| --- | ---: | ---: | ---: |
+| Base LFM3 | 55.86% | 82.81% (53/64) | 286/512 |
+| Trained LFM3 | 55.66% | 78.12% (50/64) | 285/512 |
+
+At pass@8, 50 tasks were solved by both checkpoints, 3 only by the base checkpoint, 0 only by the trained checkpoint, and 11 by neither. Across per-task sample counts, the trained checkpoint improved on 14 tasks, tied on 36, and regressed on 14. This indicates essentially unchanged single-sample accuracy but lower sampled coverage/diversity after training.
+
+The historical training log contains reward, gradient norm, valid-test count, and mistake-book metrics. It does not contain loss or KL divergence, so those metrics cannot be reconstructed retroactively.
